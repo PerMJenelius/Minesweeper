@@ -14,6 +14,9 @@ namespace MineSweeper
     {
         static int nrMines = 5;
         static int[,] mines = new int[10, 10];
+        static int nrCells = 100;
+        static int nrResolved = 0;
+
         public MineSweeper()
         {
             InitializeComponent();
