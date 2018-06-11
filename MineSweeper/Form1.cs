@@ -14,6 +14,8 @@ namespace MineSweeper
     {
         static int nrMines = 5;
         static int[,] mines = new int[10, 10];
+        static int nrCells = 100;
+        static int nrResolved = 0;
         public MineSweeper()
         {
             InitializeComponent();
@@ -41,6 +43,7 @@ namespace MineSweeper
             }
 
             textBoxNrMines.Text = nrMines.ToString();
+            nrResolved = nrMines;
         }
 
         private void CalculateProximityValues()
@@ -117,7 +120,14 @@ namespace MineSweeper
         {
             var button = sender as Button;
 
-            if (e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Left)
+            {
+                if (button.Text == string.Empty)
+                {
+                    DisplayNumber(button);
+                }
+            }
+            else if (e.Button == MouseButtons.Right)
             {
                 if (button.Text == string.Empty)
                 {
@@ -134,13 +144,6 @@ namespace MineSweeper
                 else if (button.Text == "?")
                 {
                     button.Text = string.Empty;
-                }
-            }
-            else if (e.Button == MouseButtons.Left)
-            {
-                if (button.Text == string.Empty)
-                {
-                    DisplayNumber(button);
                 }
             }
 
