@@ -16,6 +16,7 @@ namespace MineSweeper
         static int[,] mines = new int[10, 10];
         static int nrCells = 100;
         static int nrResolved = 0;
+
         public MineSweeper()
         {
             InitializeComponent();
@@ -124,7 +125,7 @@ namespace MineSweeper
             {
                 if (button.Text == string.Empty)
                 {
-                    DisplayNumber(button);
+                   DisplayNumber(button);
                 }
             }
             else if (e.Button == MouseButtons.Right)
@@ -147,7 +148,54 @@ namespace MineSweeper
                 }
             }
 
+            CheckForWin();
+
             buttonReset.Focus();
+        }
+
+        private void CheckForWin()
+        {
+            int nrCleared = 0;
+
+            foreach (var button in Controls.OfType<Button>())
+            {
+                if (button.Name == "buttonReset")
+                {
+                    break;
+                }
+
+                if (button.Text != string.Empty)
+                {
+                    try
+                    {
+                        int mineNr = Convert.ToInt32(button.Text);
+
+                        if (mineNr > 0 && mineNr < 9)
+                        {
+                            ++nrCleared;
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+
+                if (button.Enabled == false)
+                {
+                    ++nrCleared;
+                }
+            }
+
+            if (nrCleared + nrMines >= nrCells)
+            {
+                Win();
+            }
+        }
+
+        private void Win()
+        {
+            MessageBox.Show("You win!");
         }
 
         private void DisplayNumber(Button button)
@@ -164,26 +212,32 @@ namespace MineSweeper
                 case 1:
                     button.ForeColor = Color.Green;
                     button.Text = "1";
+                    ++nrResolved;
                     break;
                 case 2:
                     button.ForeColor = Color.Blue;
                     button.Text = "2";
+                    ++nrResolved;
                     break;
                 case 3:
                     button.ForeColor = Color.DarkOrange;
                     button.Text = "3";
+                    ++nrResolved;
                     break;
                 case 4:
                     button.ForeColor = Color.DarkRed;
                     button.Text = "4";
+                    ++nrResolved;
                     break;
                 case 5:
                     button.ForeColor = Color.Purple;
                     button.Text = "5";
+                    ++nrResolved;
                     break;
                 case 6:
                     button.ForeColor = Color.Brown;
                     button.Text = "6";
+                    ++nrResolved;
                     break;
                 case 9:
                     Death();
@@ -191,6 +245,7 @@ namespace MineSweeper
                 default:
                     button.ForeColor = Color.Black;
                     button.Text = mines[posX, posY].ToString();
+                    ++nrResolved;
                     break;
             }
         }
@@ -302,6 +357,7 @@ namespace MineSweeper
 
                 if (mines[posX, posY] == 0)
                 {
+                    ++nrResolved;
                     ClearEmptyCells(button);
                 }
                 else
