@@ -11,7 +11,7 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 12;
+        static int nrMines = 5;
         static int[,] mines = new int[10, 10];
         static int nrCells = 100;
         static int nrResolved = 0;
@@ -165,10 +165,10 @@ namespace MineSweeper
                     if (button.Text == string.Empty)
                     {
                         button.ForeColor = Color.Red;
-                        button.Text = "Г";
+                        button.Text = "ì";
                         textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) - 1).ToString();
                     }
-                    else if (button.Text == "Г")
+                    else if (button.Text == "ì")
                     {
                         button.ForeColor = Color.Red;
                         button.Text = "?";
@@ -237,7 +237,7 @@ namespace MineSweeper
                 if (mines[posX,posY] == 9)
                 {
                     button.ForeColor = Color.Red;
-                    button.Text = "Г";
+                    button.Text = "ì";
                 }
             }
 
@@ -303,6 +303,7 @@ namespace MineSweeper
             int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
             int posY = Convert.ToInt32(btnId.Split('y')[1]);
 
+            button.Text = string.Empty;
             button.Enabled = false;
 
             //top left
@@ -432,7 +433,7 @@ namespace MineSweeper
                         button.Text = "*";
                     }
                 }
-                else if (mines[posX, posY] != 9 && button.Text == "Г")
+                else if (mines[posX, posY] != 9 && button.Text == "ì")
                 {
                     button.Text = "X";
                 }
