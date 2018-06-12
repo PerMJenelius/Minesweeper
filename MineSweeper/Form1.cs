@@ -5,8 +5,6 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MineSweeper
@@ -20,13 +18,14 @@ namespace MineSweeper
         static List<Button> buttons;
         static TextBox timeBox;
         static bool running = false;
-        Thread timer = new Thread(MyTimer);
+        Timer timer = new Timer();
+        static int time = 0;
+        //static Thread timer;
 
         public MineSweeper()
         {
             InitializeComponent();
             NewGame();
-            timer.Start();
         }
 
         private void NewGame()
@@ -35,18 +34,21 @@ namespace MineSweeper
             CalculateProximityValues();
             ResetButtons();
             running = true;
+            StartTimer();
         }
 
-        private static void MyTimer()
+        private void StartTimer()
         {
-            int nrSeconds = 0;
+            time = 0;
+            timer.Tick += new EventHandler(timer_Tick);
+            timer.Interval = (1000) * (1);
+            timer.Start();
+        }
 
-            while (running)
-            {
-                Thread.Sleep(1000);
-                ++nrSeconds;
-                timeBox.Text = nrSeconds.ToString();
-            }
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            ++time;
+            timeBox.Text = time.ToString();
         }
 
         private void ResetButtons()
@@ -147,36 +149,39 @@ namespace MineSweeper
 
         private void HandleMouseClick(object sender, MouseEventArgs e)
         {
-            var button = sender as Button;
-
-            if (e.Button == MouseButtons.Left)
+            if (running)
             {
-                if (button.Text == string.Empty)
-                {
-                    DisplayNumber(button);
-                }
-            }
-            else if (e.Button == MouseButtons.Right)
-            {
-                if (button.Text == string.Empty)
-                {
-                    button.ForeColor = Color.Red;
-                    button.Text = "Г";
-                    textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) - 1).ToString();
-                }
-                else if (button.Text == "Г")
-                {
-                    button.ForeColor = Color.Red;
-                    button.Text = "?";
-                    textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) + 1).ToString();
-                }
-                else if (button.Text == "?")
-                {
-                    button.Text = string.Empty;
-                }
-            }
+                var button = sender as Button;
 
-            CheckForWin();
+                if (e.Button == MouseButtons.Left)
+                {
+                    if (button.Text == string.Empty)
+                    {
+                        DisplayNumber(button);
+                    }
+                }
+                else if (e.Button == MouseButtons.Right)
+                {
+                    if (button.Text == string.Empty)
+                    {
+                        button.ForeColor = Color.Red;
+                        button.Text = "Г";
+                        textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) - 1).ToString();
+                    }
+                    else if (button.Text == "Г")
+                    {
+                        button.ForeColor = Color.Red;
+                        button.Text = "?";
+                        textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) + 1).ToString();
+                    }
+                    else if (button.Text == "?")
+                    {
+                        button.Text = string.Empty;
+                    }
+                }
+
+                CheckForWin();
+            }
 
             buttonReset.Focus();
         }
@@ -225,10 +230,19 @@ namespace MineSweeper
 
             foreach (var button in buttons)
             {
-                button.Enabled = false;
+                string btnId = button.Name.Split('n')[1];
+                int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
+                int posY = Convert.ToInt32(btnId.Split('y')[1]);
+
+                if (mines[posX,posY] == 9)
+                {
+                    button.ForeColor = Color.Red;
+                    button.Text = "Г";
+                }
             }
 
             running = false;
+            timer.Stop();
         }
 
         private void DisplayNumber(Button button)
@@ -422,16 +436,20 @@ namespace MineSweeper
                 {
                     button.Text = "X";
                 }
-
-                button.Enabled = false;
             }
 
             running = false;
+            timer.Stop();
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
         {
             NewGame();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            
         }
     }
 }
