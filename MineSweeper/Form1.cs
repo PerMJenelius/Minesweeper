@@ -11,7 +11,7 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 5;
+        static int nrMines = 15;
         static int[,] mines = new int[10, 10];
         static int nrCells = 100;
         static int nrResolved = 0;
@@ -20,7 +20,6 @@ namespace MineSweeper
         static bool running = false;
         Timer timer = new Timer();
         static int time = 0;
-        //static Thread timer;
 
         public MineSweeper()
         {
@@ -227,20 +226,6 @@ namespace MineSweeper
         private void Win()
         {
             buttonReset.Text = "You win!";
-
-            foreach (var button in buttons)
-            {
-                string btnId = button.Name.Split('n')[1];
-                int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
-                int posY = Convert.ToInt32(btnId.Split('y')[1]);
-
-                if (mines[posX,posY] == 9)
-                {
-                    button.ForeColor = Color.Red;
-                    button.Text = "ì";
-                }
-            }
-
             running = false;
             timer.Stop();
         }
@@ -430,6 +415,7 @@ namespace MineSweeper
                 {
                     if (button.Text == string.Empty)
                     {
+                        button.ForeColor = Color.Black;
                         button.Text = "*";
                     }
                 }
