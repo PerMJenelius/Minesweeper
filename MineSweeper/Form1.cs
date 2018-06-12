@@ -16,7 +16,9 @@ namespace MineSweeper
         static int nrCells = 100;
         static int nrResolved = 0;
         static List<Button> buttons;
+        static Button startButton;
         static TextBox timeBox;
+        static bool newGame = true;
         static bool running = false;
         Timer timer = new Timer();
         static int time = 0;
@@ -24,7 +26,10 @@ namespace MineSweeper
         public MineSweeper()
         {
             InitializeComponent();
-            NewGame();
+            textBoxNrMines.Text = nrMines.ToString();
+            textBoxTime.Text = "0";
+            timer.Tick += new EventHandler(timer_Tick);
+            timer.Interval = 1000;
         }
 
         private void NewGame()
@@ -39,8 +44,6 @@ namespace MineSweeper
         private void StartTimer()
         {
             time = 0;
-            timer.Tick += new EventHandler(timer_Tick);
-            timer.Interval = (1000) * (1);
             timer.Start();
         }
 
@@ -128,6 +131,10 @@ namespace MineSweeper
             int xPos;
             int yPos;
 
+            //string btnId = startButton.Name.Split('n')[1];
+            //int strX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
+            //int strY = Convert.ToInt32(btnId.Split('y')[1]);
+
             for (int i = 0; i < nrMines; i++)
             {
                 bool minefreePos = false;
@@ -137,7 +144,7 @@ namespace MineSweeper
                     xPos = rng.Next(0, 10);
                     yPos = rng.Next(0, 10);
 
-                    if (mines[xPos, yPos] != 9)
+                    if (/*xPos != strX && yPos != strY &&*/ mines[xPos, yPos] != 9)
                     {
                         mines[xPos, yPos] = 9;
                         minefreePos = true;
@@ -148,6 +155,13 @@ namespace MineSweeper
 
         private void HandleMouseClick(object sender, MouseEventArgs e)
         {
+            if (newGame)
+            {
+                newGame = false;
+                startButton = sender as Button;
+                NewGame();
+            }
+
             if (running)
             {
                 var button = sender as Button;
@@ -230,6 +244,32 @@ namespace MineSweeper
             timer.Stop();
         }
 
+        private void Lose()
+        {
+            foreach (var button in buttons)
+            {
+                string btnId = button.Name.Split('n')[1];
+                int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
+                int posY = Convert.ToInt32(btnId.Split('y')[1]);
+
+                if (mines[posX, posY] == 9)
+                {
+                    if (button.Text == string.Empty)
+                    {
+                        button.ForeColor = Color.Black;
+                        button.Text = "*";
+                    }
+                }
+                else if (mines[posX, posY] != 9 && button.Text == "ì")
+                {
+                    button.Text = "X";
+                }
+            }
+
+            running = false;
+            timer.Stop();
+        }
+
         private void DisplayNumber(Button button)
         {
             string btnId = button.Name.Split('n')[1];
@@ -272,7 +312,7 @@ namespace MineSweeper
                     ++nrResolved;
                     break;
                 case 9:
-                    Death();
+                    Lose();
                     break;
                 default:
                     button.ForeColor = Color.Black;
@@ -403,40 +443,9 @@ namespace MineSweeper
             }
         }
 
-        private void Death()
-        {
-            foreach (var button in buttons)
-            {
-                string btnId = button.Name.Split('n')[1];
-                int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
-                int posY = Convert.ToInt32(btnId.Split('y')[1]);
-
-                if (mines[posX, posY] == 9)
-                {
-                    if (button.Text == string.Empty)
-                    {
-                        button.ForeColor = Color.Black;
-                        button.Text = "*";
-                    }
-                }
-                else if (mines[posX, posY] != 9 && button.Text == "ì")
-                {
-                    button.Text = "X";
-                }
-            }
-
-            running = false;
-            timer.Stop();
-        }
-
         private void buttonReset_Click(object sender, EventArgs e)
         {
             NewGame();
-        }
-
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            
         }
     }
 }
