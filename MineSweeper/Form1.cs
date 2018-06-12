@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -12,15 +13,20 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 5;
+        static int nrMines = 12;
         static int[,] mines = new int[10, 10];
         static int nrCells = 100;
         static int nrResolved = 0;
+        static List<Button> buttons;
+        static TextBox timeBox;
+        static bool running = false;
+        Thread timer = new Thread(MyTimer);
 
         public MineSweeper()
         {
             InitializeComponent();
             NewGame();
+            timer.Start();
         }
 
         private void NewGame()
@@ -28,11 +34,31 @@ namespace MineSweeper
             RandomizeMines();
             CalculateProximityValues();
             ResetButtons();
+            running = true;
+        }
+
+        private static void MyTimer()
+        {
+            int nrSeconds = 0;
+
+            while (running)
+            {
+                Thread.Sleep(1000);
+                ++nrSeconds;
+                timeBox.Text = nrSeconds.ToString();
+            }
         }
 
         private void ResetButtons()
         {
-            foreach (var button in Controls.OfType<Button>())
+            buttons = Controls.OfType<Button>()
+                .Where(b => b.Name != "buttonReset")
+                .ToList();
+
+            timeBox = Controls.OfType<TextBox>()
+                .FirstOrDefault(t => t.Name == "textBoxTime");
+
+            foreach (var button in buttons)
             {
                 if (button.Name == "buttonReset")
                 {
@@ -45,6 +71,8 @@ namespace MineSweeper
 
             textBoxNrMines.Text = nrMines.ToString();
             nrResolved = nrMines;
+            buttonReset.Text = "Reset";
+            textBoxTime.Text = "0";
         }
 
         private void CalculateProximityValues()
@@ -125,7 +153,7 @@ namespace MineSweeper
             {
                 if (button.Text == string.Empty)
                 {
-                   DisplayNumber(button);
+                    DisplayNumber(button);
                 }
             }
             else if (e.Button == MouseButtons.Right)
@@ -157,51 +185,56 @@ namespace MineSweeper
         {
             int nrCleared = 0;
 
-            foreach (var button in Controls.OfType<Button>())
+            if (running)
             {
-                if (button.Name == "buttonReset")
+                foreach (var button in buttons)
                 {
-                    break;
-                }
-
-                if (button.Text != string.Empty)
-                {
-                    try
+                    if (button.Text != string.Empty)
                     {
-                        int mineNr = Convert.ToInt32(button.Text);
-
-                        if (mineNr > 0 && mineNr < 9)
+                        try
                         {
-                            ++nrCleared;
+                            int mineNr = Convert.ToInt32(button.Text);
+
+                            if (mineNr > 0 && mineNr < 9)
+                            {
+                                ++nrCleared;
+                            }
+                        }
+                        catch (Exception)
+                        {
+
                         }
                     }
-                    catch (Exception)
-                    {
 
+                    if (button.Enabled == false)
+                    {
+                        ++nrCleared;
                     }
                 }
 
-                if (button.Enabled == false)
+                if (nrCleared + nrMines >= nrCells)
                 {
-                    ++nrCleared;
+                    Win();
                 }
-            }
-
-            if (nrCleared + nrMines >= nrCells)
-            {
-                Win();
             }
         }
 
         private void Win()
         {
-            MessageBox.Show("You win!");
+            buttonReset.Text = "You win!";
+
+            foreach (var button in buttons)
+            {
+                button.Enabled = false;
+            }
+
+            running = false;
         }
 
         private void DisplayNumber(Button button)
         {
             string btnId = button.Name.Split('n')[1];
-            int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0,1));
+            int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
             int posY = Convert.ToInt32(btnId.Split('y')[1]);
 
             switch (mines[posX, posY])
@@ -372,13 +405,8 @@ namespace MineSweeper
 
         private void Death()
         {
-            foreach (var button in Controls.OfType<Button>())
+            foreach (var button in buttons)
             {
-                if (button.Name == "buttonReset")
-                {
-                    break;
-                }
-
                 string btnId = button.Name.Split('n')[1];
                 int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
                 int posY = Convert.ToInt32(btnId.Split('y')[1]);
@@ -397,6 +425,8 @@ namespace MineSweeper
 
                 button.Enabled = false;
             }
+
+            running = false;
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
