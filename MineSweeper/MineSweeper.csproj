@@ -45,6 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MineButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Minesweeper.cs">
       <SubType>Form</SubType>
     </Compile>
