@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace MineSweeper
@@ -20,16 +21,22 @@ namespace MineSweeper
         static TextBox timeBox;
         static bool newGame = true;
         static bool running = false;
-        Timer timer = new Timer();
-        static int time = 0;
+        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+        static double time = 0;
 
         public MineSweeper()
         {
             InitializeComponent();
+            InitializeTimer();
+        }
+
+        private void InitializeTimer()
+        {
             textBoxNrMines.Text = nrMines.ToString();
+
             textBoxTime.Text = "0";
             timer.Tick += new EventHandler(timer_Tick);
-            timer.Interval = 1000;
+            timer.Interval = 100;
         }
 
         private void NewGame()
@@ -49,7 +56,7 @@ namespace MineSweeper
 
         private void timer_Tick(object sender, EventArgs e)
         {
-            ++time;
+            time = Math.Round((time + 0.1), 1);
             timeBox.Text = time.ToString();
         }
 
@@ -244,8 +251,10 @@ namespace MineSweeper
             timer.Stop();
         }
 
-        private void Lose()
+        private void Lose(Button btn)
         {
+            Explode(btn);
+
             foreach (var button in buttons)
             {
                 string btnId = button.Name.Split('n')[1];
@@ -268,6 +277,15 @@ namespace MineSweeper
 
             running = false;
             timer.Stop();
+        }
+
+        private void Explode(Button btn)
+        {
+            //btn.BackColor = Color.Yellow;
+            //Thread.Sleep(1000);
+            //btn.BackColor = Color.Red;
+            //Thread.Sleep(1000);
+            //btn.BackColor = Color.Black;
         }
 
         private void DisplayNumber(Button button)
@@ -312,7 +330,7 @@ namespace MineSweeper
                     ++nrResolved;
                     break;
                 case 9:
-                    Lose();
+                    Lose(button);
                     break;
                 default:
                     button.ForeColor = Color.Black;
