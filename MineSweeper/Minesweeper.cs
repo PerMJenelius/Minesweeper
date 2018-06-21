@@ -187,6 +187,7 @@ namespace MineSweeper
                         button.ForeColor = Color.Red;
                         button.Text = "ì";
                         textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) - 1).ToString();
+                        //button.Image = Image.FromFile(@"C://images/flag.png");
                     }
                     else if (button.Text == "ì")
                     {
@@ -463,7 +464,10 @@ namespace MineSweeper
 
         private void buttonReset_Click(object sender, EventArgs e)
         {
-            NewGame();
+            timer.Stop();
+            textBoxTime.Text = "0";
+            ResetButtons();
+            newGame = true;
         }
     }
 }
