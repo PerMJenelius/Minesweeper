@@ -12,11 +12,13 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 15;
+        static int nrMines = 20;
         static int[,] mines = new int[10, 10];
-        static int nrCells = 100;
+        static int nrColumns = 12;
+        static int nrRows = 12;
         static int nrResolved = 0;
         static List<Button> buttons;
+        static List<MineButton> mineButtons;
         static Button startButton;
         static TextBox timeBox;
         static bool newGame = true;
@@ -28,6 +30,52 @@ namespace MineSweeper
         {
             InitializeComponent();
             InitializeTimer();
+            Shown += InitializeButtons;
+            ResizeWindow();
+        }
+
+        private void ResizeWindow()
+        {
+            Width = (nrColumns * 20) + 38;
+            textBoxTime.Left = Width - textBoxTime.Width - 28;
+            labelTime.Left = textBoxTime.Left - 2;
+            buttonReset.Left = (Width / 2) - (buttonReset.Width / 2) - 8;
+
+            Height = (nrRows * 20) + 142;
+            panelInfo.Top = Bottom - panelInfo.Height - 38;
+        }
+
+        private void InitializeButtons(object sender, EventArgs e)
+        {
+            mineButtons = new List<MineButton>();
+
+            int posX = textBoxNrMines.Left;
+            int posY = textBoxNrMines.Bottom + 1;
+
+            for (int y = 1; y < (nrRows+1); y++)
+            {
+                for (int x = 1; x < (nrColumns+1); x++)
+                {
+                    MineButton button = new MineButton(x,y);
+                    button.Font = new Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                    button.Location = new Point(posX, posY);
+                    button.Margin = new Padding(0);
+                    button.Name = $"button{y}:{x}";
+                    button.Size = new Size(20, 20);
+                    button.TabIndex = 5;
+                    button.UseVisualStyleBackColor = true;
+                    button.MouseDown += new MouseEventHandler(HandleMouseClickNew);
+                    button.MouseEnter += new EventHandler(HoverOverButton);
+                    Controls.Add(button);
+                    mineButtons.Add(button);
+                    posX += 20;
+                }
+                posX -= 20 * nrColumns;
+                posY += 20;
+            }
+
+            //ToDo: Flytta detta anrop?
+            RandomizeMines();
         }
 
         private void InitializeTimer()
@@ -133,14 +181,9 @@ namespace MineSweeper
 
         private void RandomizeMines()
         {
-            mines = new int[10, 10];
             Random rng = new Random();
             int xPos;
             int yPos;
-
-            //string btnId = startButton.Name.Split('n')[1];
-            //int strX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
-            //int strY = Convert.ToInt32(btnId.Split('y')[1]);
 
             for (int i = 0; i < nrMines; i++)
             {
@@ -148,12 +191,15 @@ namespace MineSweeper
 
                 while (!minefreePos)
                 {
-                    xPos = rng.Next(0, 10);
-                    yPos = rng.Next(0, 10);
+                    xPos = rng.Next(1, (nrColumns+1));
+                    yPos = rng.Next(1, (nrRows+1));
 
-                    if (/*xPos != strX && yPos != strY &&*/ mines[xPos, yPos] != 9)
+                    var button = mineButtons
+                        .FirstOrDefault(b => b.XPosition == xPos && b.YPosition == yPos);
+
+                    if (button.CellType != CellType.Mine)
                     {
-                        mines[xPos, yPos] = 9;
+                        button.CellType = CellType.Mine;
                         minefreePos = true;
                     }
                 }
@@ -238,7 +284,7 @@ namespace MineSweeper
                     }
                 }
 
-                if (nrCleared + nrMines >= nrCells)
+                if (nrCleared + nrMines >= nrColumns)
                 {
                     Win();
                 }
@@ -469,5 +515,18 @@ namespace MineSweeper
             ResetButtons();
             newGame = true;
         }
+
+        private void HoverOverButton(object sender, EventArgs e)
+        {
+            MineButton button = sender as MineButton;
+            //labelInfo.Text = $"Thanks for stopping by {button.Name}.";
+            labelInfo.Text = button.CellType == CellType.Mine ? "MINES!" : "You're OK";
+        }
+
+        private void HandleMouseClickNew(object sender, MouseEventArgs e)
+        {
+            buttonReset.Focus();
+        }
+
     }
 }

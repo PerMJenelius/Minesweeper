@@ -11,28 +11,37 @@ namespace MineSweeper
     {
         public int XPosition { get; set; }
         public int YPosition { get; set; }
-        public CellType Value { get; set; }
+        public CellType CellType { get; set; }
         public FlagType FlagType { get; set; }
+
+        public MineButton(int xPosition, int yPosition)
+        {
+            XPosition = xPosition;
+            YPosition = yPosition;
+            CellType = CellType.Empty;
+            FlagType = FlagType.None;
+        }
     }
 
     public enum CellType
     {
-        Empty = 0,
-        One = 1,
-        Two = 2,
-        Three = 3,
-        Four = 4,
-        Five = 5,
-        Six = 6,
-        Seven = 7,
-        Eight = 8,
-        Mine = 9
+        Empty,
+        One,
+        Two,
+        Three,
+        Four,
+        Five,
+        Six,
+        Seven,
+        Eight,
+        Mine
     }
 
     public enum FlagType
     {
-        None = 0,
-        Flag = 1,
-        Question = 2
+        None,
+        Flag,
+        Number,
+        Question
     }
 }
