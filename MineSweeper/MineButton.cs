@@ -21,6 +21,41 @@ namespace MineSweeper
             CellType = CellType.Empty;
             FlagType = FlagType.None;
         }
+
+        public void AddOneToCellType()
+        {
+            switch (CellType)
+            {
+                case CellType.Empty:
+                    CellType = CellType.One;
+                    break;
+                case CellType.One:
+                    CellType = CellType.Two;
+                    break;
+                case CellType.Two:
+                    CellType = CellType.Three;
+                    break;
+                case CellType.Three:
+                    CellType = CellType.Four;
+                    break;
+                case CellType.Four:
+                    CellType = CellType.Five;
+                    break;
+                case CellType.Five:
+                    CellType = CellType.Six;
+                    break;
+                case CellType.Six:
+                    CellType = CellType.Seven;
+                    break;
+                case CellType.Seven:
+                case CellType.Eight:
+                    CellType = CellType.Eight;
+                    break;
+                default:
+                    CellType = CellType.Empty;
+                    break;
+            }
+        }
     }
 
     public enum CellType

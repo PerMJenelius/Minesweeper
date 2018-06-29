@@ -57,14 +57,14 @@ namespace MineSweeper
                 for (int x = 1; x < (nrColumns+1); x++)
                 {
                     MineButton button = new MineButton(x,y);
-                    button.Font = new Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                    button.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
                     button.Location = new Point(posX, posY);
                     button.Margin = new Padding(0);
                     button.Name = $"button{y}:{x}";
                     button.Size = new Size(20, 20);
                     button.TabIndex = 5;
                     button.UseVisualStyleBackColor = true;
-                    button.MouseDown += new MouseEventHandler(HandleMouseClickNew);
+                    button.MouseDown += new MouseEventHandler(MineButton_Click);
                     button.MouseEnter += new EventHandler(HoverOverButton);
                     Controls.Add(button);
                     mineButtons.Add(button);
@@ -74,8 +74,9 @@ namespace MineSweeper
                 posY += 20;
             }
 
-            //ToDo: Flytta detta anrop?
+            //ToDo: Flytta dessa anrop
             RandomizeMines();
+            CalculateProximityValues();
         }
 
         private void InitializeTimer()
@@ -136,43 +137,24 @@ namespace MineSweeper
 
         private void CalculateProximityValues()
         {
-            for (int posX = 0; posX < 10; posX++)
+            IEnumerable<MineButton> mineFreeButtons = mineButtons
+                .Where(b => b.CellType != CellType.Mine);
+
+            foreach (var button in mineFreeButtons)
             {
-                for (int posY = 0; posY < 10; posY++)
+                for (int x = button.XPosition-1; x <= button.XPosition+1; x++)
                 {
-                    if (mines[posX, posY] != 9)
+                    for (int y = button.YPosition-1; y <= button.YPosition+1; y++)
                     {
-                        if (posX > 0 && posY > 0 && mines[posX - 1, posY - 1] == 9)
+                        if (x > 0 && y > 0 && x <= nrColumns && y <= nrRows)
                         {
-                            ++mines[posX, posY];
-                        }
-                        if (posY > 0 && mines[posX, posY - 1] == 9)
-                        {
-                            ++mines[posX, posY];
-                        }
-                        if (posX < 9 && posY > 0 && mines[posX + 1, posY - 1] == 9)
-                        {
-                            ++mines[posX, posY];
-                        }
-                        if (posX > 0 && mines[posX - 1, posY] == 9)
-                        {
-                            ++mines[posX, posY];
-                        }
-                        if (posX < 9 && mines[posX + 1, posY] == 9)
-                        {
-                            ++mines[posX, posY];
-                        }
-                        if (posX > 0 && posY < 9 && mines[posX - 1, posY + 1] == 9)
-                        {
-                            ++mines[posX, posY];
-                        }
-                        if (posY < 9 && mines[posX, posY + 1] == 9)
-                        {
-                            ++mines[posX, posY];
-                        }
-                        if (posX < 9 && posY < 9 && mines[posX + 1, posY + 1] == 9)
-                        {
-                            ++mines[posX, posY];
+                            MineButton tempButton = mineButtons
+                                .FirstOrDefault(b => b.XPosition == x && b.YPosition == y);
+
+                            if (tempButton != button && tempButton.CellType == CellType.Mine)
+                            {
+                                button.AddOneToCellType();
+                            }
                         }
                     }
                 }
@@ -204,53 +186,6 @@ namespace MineSweeper
                     }
                 }
             }
-        }
-
-        private void HandleMouseClick(object sender, MouseEventArgs e)
-        {
-            if (newGame)
-            {
-                newGame = false;
-                startButton = sender as Button;
-                NewGame();
-            }
-
-            if (running)
-            {
-                var button = sender as Button;
-
-                if (e.Button == MouseButtons.Left)
-                {
-                    if (button.Text == string.Empty)
-                    {
-                        DisplayNumber(button);
-                    }
-                }
-                else if (e.Button == MouseButtons.Right)
-                {
-                    if (button.Text == string.Empty)
-                    {
-                        button.ForeColor = Color.Red;
-                        button.Text = "ì";
-                        textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) - 1).ToString();
-                        //button.Image = Image.FromFile(@"C://images/flag.png");
-                    }
-                    else if (button.Text == "ì")
-                    {
-                        button.ForeColor = Color.Red;
-                        button.Text = "?";
-                        textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) + 1).ToString();
-                    }
-                    else if (button.Text == "?")
-                    {
-                        button.Text = string.Empty;
-                    }
-                }
-
-                CheckForWin();
-            }
-
-            buttonReset.Focus();
         }
 
         private void CheckForWin()
@@ -508,6 +443,53 @@ namespace MineSweeper
             }
         }
 
+        private void MineButton_Click(object sender, MouseEventArgs e)
+        {
+            if (newGame)
+            {
+                newGame = false;
+                startButton = sender as Button;
+                NewGame();
+            }
+
+            if (running)
+            {
+                var button = sender as Button;
+
+                if (e.Button == MouseButtons.Left)
+                {
+                    if (button.Text == string.Empty)
+                    {
+                        DisplayNumber(button);
+                    }
+                }
+                else if (e.Button == MouseButtons.Right)
+                {
+                    if (button.Text == string.Empty)
+                    {
+                        button.ForeColor = Color.Red;
+                        button.Text = "ì";
+                        textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) - 1).ToString();
+                        //button.Image = Image.FromFile(@"C://images/flag.png");
+                    }
+                    else if (button.Text == "ì")
+                    {
+                        button.ForeColor = Color.Red;
+                        button.Text = "?";
+                        textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) + 1).ToString();
+                    }
+                    else if (button.Text == "?")
+                    {
+                        button.Text = string.Empty;
+                    }
+                }
+
+                CheckForWin();
+            }
+
+            buttonReset.Focus();
+        }
+
         private void buttonReset_Click(object sender, EventArgs e)
         {
             timer.Stop();
@@ -522,11 +504,5 @@ namespace MineSweeper
             //labelInfo.Text = $"Thanks for stopping by {button.Name}.";
             labelInfo.Text = button.CellType == CellType.Mine ? "MINES!" : "You're OK";
         }
-
-        private void HandleMouseClickNew(object sender, MouseEventArgs e)
-        {
-            buttonReset.Focus();
-        }
-
     }
 }
