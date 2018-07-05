@@ -12,9 +12,9 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 500;
-        static int nrColumns = 95;
-        static int nrRows = 51;
+        static int nrMines = 20;
+        static int nrColumns = 93; //max 93
+        static int nrRows = 51; //max 51
         static List<MineButton> mineButtons;
         static Button startButton;
         static bool newGame = true;
@@ -152,17 +152,7 @@ namespace MineSweeper
 
         private void CheckForWin()
         {
-            int nrRevealedCells = 0;
-
-            foreach (var button in mineButtons)
-            {
-                if (button.CellType != CellType.Mine && button.FlagType == FlagType.Number)
-                {
-                    ++nrRevealedCells;
-                }
-            }
-
-            if ((nrMines + nrRevealedCells) >= mineButtons.Count)
+            if (mineButtons.Count(b => b.FlagType == FlagType.Number) == mineButtons.Count(b => b.CellType != CellType.Mine))
             {
                 Win();
             }
@@ -190,12 +180,7 @@ namespace MineSweeper
             {
                 if (button.CellType == CellType.Mine)
                 {
-                    if (button.Text == string.Empty)
-                    {
-                        button.BackColor = Color.Black;
-                        //button.ForeColor = Color.Black;
-                        //button.Text = "*";
-                    }
+                    button.BackColor = Color.Black;
                 }
             }
 
@@ -268,7 +253,7 @@ namespace MineSweeper
                         MineButton tempButton = mineButtons
                             .FirstOrDefault(b => b.XPosition == x && b.YPosition == y);
 
-                        if (tempButton != button && tempButton.Enabled && tempButton.CellType != CellType.Mine)
+                        if (tempButton.FlagType == FlagType.None && tempButton.CellType != CellType.Mine)
                         {
                             DisplayNumber(tempButton);
                         }
@@ -282,7 +267,7 @@ namespace MineSweeper
             if (newGame)
             {
                 newGame = false;
-                startButton = sender as Button;
+                startButton = sender as MineButton;
                 NewGame();
             }
 
@@ -333,7 +318,8 @@ namespace MineSweeper
             //labelInfo.Text = $"Thanks for stopping by {button.Name}.";
             //labelInfo.Text = button.CellType == CellType.Mine ? "MINES!" : "You're OK";
             //labelInfo.Text = $"{button.XPosition} : {button.YPosition}";
-            labelInfo.Text = $"{mineButtons.Where(b => b.FlagType == FlagType.Number).Count().ToString()} + {nrMines} / {mineButtons.Count}";
+            //labelInfo.Text = $"{mineButtons.Where(b => b.FlagType == FlagType.Number).Count().ToString()} + {nrMines} / {mineButtons.Count}";
+            labelInfo.Text = $"{mineButtons.Count(b => b.FlagType == FlagType.Number)} / {mineButtons.Count(b => b.CellType != CellType.Mine)}";
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
