@@ -13,32 +13,34 @@ namespace MineSweeper
     public partial class MineSweeper : Form
     {
         static int nrMines = 500;
-        static int nrColumns = 90;
-        static int nrRows = 50;
+        static int nrColumns = 95;
+        static int nrRows = 51;
         static List<MineButton> mineButtons;
         static Button startButton;
         static bool newGame = true;
         static bool running = false;
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
-        static double time = 0;
+        static int time = 0;
 
         public MineSweeper()
         {
             InitializeComponent();
             InitializeTimer();
+            ResetTextBoxes();
             Shown += InitializeButtons;
             ResizeWindow();
         }
 
-        private void ResizeWindow()
+        private void InitializeTimer()
         {
-            Width = (nrColumns * 20) + 38;
-            textBoxTime.Left = Width - textBoxTime.Width - 28;
-            labelTime.Left = textBoxTime.Left - 2;
-            buttonReset.Left = (Width / 2) - (buttonReset.Width / 2) - 8;
+            timer.Tick += new EventHandler(timer_Tick);
+            timer.Interval = 1000;
+        }
 
-            Height = (nrRows * 20) + 142;
-            panelInfo.Top = Bottom - panelInfo.Height - 38;
+        private void ResetTextBoxes()
+        {
+            textBoxNrMines.Text = nrMines.ToString();
+            textBoxTime.Text = "0";
         }
 
         private void InitializeButtons(object sender, EventArgs e)
@@ -46,7 +48,7 @@ namespace MineSweeper
             mineButtons = new List<MineButton>();
 
             int posX = textBoxNrMines.Left;
-            int posY = textBoxNrMines.Bottom + 1;
+            int posY = textBoxNrMines.Bottom + 5;
 
             for (int y = 1; y < (nrRows + 1); y++)
             {
@@ -61,23 +63,20 @@ namespace MineSweeper
                 posX -= 20 * nrColumns;
                 posY += 20;
             }
-
-            //ToDo: Flytta dessa anrop
-            RandomizeMines();
-            CalculateProximityValues();
         }
 
-        private void InitializeTimer()
+        private void ResizeWindow()
         {
-            textBoxNrMines.Text = nrMines.ToString();
-
-            textBoxTime.Text = "0";
-            timer.Tick += new EventHandler(timer_Tick);
-            timer.Interval = 1000;
+            Width = (nrColumns * 20) + 38;
+            Height = (nrRows * 20) + 142;
+            textBoxTime.Left = Width - textBoxTime.Width - 28;
+            labelTime.Left = textBoxTime.Left - 2;
+            buttonReset.Left = (Width / 2) - (buttonReset.Width / 2) - 8;
         }
 
         private void NewGame()
         {
+            ResetTextBoxes();
             ResetButtons();
             RandomizeMines();
             CalculateProximityValues();
@@ -91,23 +90,17 @@ namespace MineSweeper
             timer.Start();
         }
 
-        private void timer_Tick(object sender, EventArgs e)
-        {
-            ++time;
-            textBoxTime.Text = time.ToString();
-        }
-
         private void ResetButtons()
         {
             foreach (var button in mineButtons)
             {
                 button.Text = string.Empty;
+                button.BackColor = SystemColors.ButtonFace;
                 button.Enabled = true;
                 button.CellType = CellType.Empty;
                 button.FlagType = FlagType.None;
             }
 
-            textBoxNrMines.Text = nrMines.ToString();
             buttonReset.Text = "Reset";
             textBoxTime.Text = "0";
         }
@@ -193,35 +186,21 @@ namespace MineSweeper
 
         private void Lose(MineButton btn)
         {
-            Explode(btn);
-
             foreach (var button in mineButtons)
             {
                 if (button.CellType == CellType.Mine)
                 {
                     if (button.Text == string.Empty)
                     {
-                        button.ForeColor = Color.Black;
-                        button.Text = "*";
+                        button.BackColor = Color.Black;
+                        //button.ForeColor = Color.Black;
+                        //button.Text = "*";
                     }
                 }
-                //else if (mines[posX, posY] != 9 && button.Text == "ì")
-                //{
-                //    button.Text = "X";
-                //}
             }
 
             running = false;
             timer.Stop();
-        }
-
-        private void Explode(Button btn)
-        {
-            //btn.BackColor = Color.Yellow;
-            //Thread.Sleep(1000);
-            //btn.BackColor = Color.Red;
-            //Thread.Sleep(1000);
-            //btn.BackColor = Color.Black;
         }
 
         private void DisplayNumber(MineButton button)
@@ -256,11 +235,11 @@ namespace MineSweeper
                     button.Text = "6";
                     break;
                 case CellType.Seven:
-                    button.ForeColor = Color.Brown;
+                    button.ForeColor = Color.Black;
                     button.Text = "7";
                     break;
                 case CellType.Eight:
-                    button.ForeColor = Color.Brown;
+                    button.ForeColor = Color.Black;
                     button.Text = "8";
                     break;
                 case CellType.Mine:
@@ -348,15 +327,7 @@ namespace MineSweeper
             buttonReset.Focus();
         }
 
-        private void buttonReset_Click(object sender, EventArgs e)
-        {
-            timer.Stop();
-            textBoxTime.Text = "0";
-            ResetButtons();
-            newGame = true;
-        }
-
-        private void HoverOverButton(object sender, EventArgs e)
+        private void MineButton_Hover(object sender, EventArgs e)
         {
             MineButton button = sender as MineButton;
             //labelInfo.Text = $"Thanks for stopping by {button.Name}.";
@@ -365,9 +336,23 @@ namespace MineSweeper
             labelInfo.Text = $"{mineButtons.Where(b => b.FlagType == FlagType.Number).Count().ToString()} + {nrMines} / {mineButtons.Count}";
         }
 
+        private void buttonReset_Click(object sender, EventArgs e)
+        {
+            timer.Stop();
+            textBoxTime.Text = "0";
+            ResetButtons();
+            newGame = true;
+        }
+
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
             buttonReset_Click(sender, e);
+        }
+
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            ++time;
+            textBoxTime.Text = time.ToString();
         }
     }
 }

@@ -131,6 +131,9 @@ namespace MineSweeper
             // 
             // panelInfo
             // 
+            this.panelInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panelInfo.BackColor = System.Drawing.SystemColors.ControlLight;
             this.panelInfo.Controls.Add(this.labelInfo);
             this.panelInfo.Location = new System.Drawing.Point(0, 570);
@@ -166,14 +169,11 @@ namespace MineSweeper
         private void InitializeMineButton(MineButton button, int posX, int posY)
         {
             button.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            button.BackColor = SystemColors.ButtonFace;
             button.Location = new Point(posX, posY);
-            button.Margin = new Padding(0);
             button.Size = new Size(20, 20);
-            button.Name = "button";
-            button.TabIndex = 5;
-            button.UseVisualStyleBackColor = true;
             button.MouseDown += new MouseEventHandler(MineButton_Click);
-            button.MouseEnter += new EventHandler(HoverOverButton);
+            button.MouseEnter += new EventHandler(MineButton_Hover);
             Controls.Add(button);
         }
 
