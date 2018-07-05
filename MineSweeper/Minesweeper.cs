@@ -12,15 +12,11 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 20;
-        static int[,] mines = new int[10, 10];
-        static int nrColumns = 12;
-        static int nrRows = 12;
-        static int nrResolved = 0;
-        static List<Button> buttons;
+        static int nrMines = 500;
+        static int nrColumns = 90;
+        static int nrRows = 50;
         static List<MineButton> mineButtons;
         static Button startButton;
-        static TextBox timeBox;
         static bool newGame = true;
         static bool running = false;
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -52,22 +48,14 @@ namespace MineSweeper
             int posX = textBoxNrMines.Left;
             int posY = textBoxNrMines.Bottom + 1;
 
-            for (int y = 1; y < (nrRows+1); y++)
+            for (int y = 1; y < (nrRows + 1); y++)
             {
-                for (int x = 1; x < (nrColumns+1); x++)
+                for (int x = 1; x < (nrColumns + 1); x++)
                 {
-                    MineButton button = new MineButton(x,y);
-                    button.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-                    button.Location = new Point(posX, posY);
-                    button.Margin = new Padding(0);
-                    button.Name = $"button{y}:{x}";
-                    button.Size = new Size(20, 20);
-                    button.TabIndex = 5;
-                    button.UseVisualStyleBackColor = true;
-                    button.MouseDown += new MouseEventHandler(MineButton_Click);
-                    button.MouseEnter += new EventHandler(HoverOverButton);
-                    Controls.Add(button);
+                    MineButton button = new MineButton(x, y);
+                    InitializeMineButton(button, posX, posY);
                     mineButtons.Add(button);
+
                     posX += 20;
                 }
                 posX -= 20 * nrColumns;
@@ -85,14 +73,14 @@ namespace MineSweeper
 
             textBoxTime.Text = "0";
             timer.Tick += new EventHandler(timer_Tick);
-            timer.Interval = 100;
+            timer.Interval = 1000;
         }
 
         private void NewGame()
         {
+            ResetButtons();
             RandomizeMines();
             CalculateProximityValues();
-            ResetButtons();
             running = true;
             StartTimer();
         }
@@ -105,32 +93,21 @@ namespace MineSweeper
 
         private void timer_Tick(object sender, EventArgs e)
         {
-            time = Math.Round((time + 0.1), 1);
-            timeBox.Text = time.ToString();
+            ++time;
+            textBoxTime.Text = time.ToString();
         }
 
         private void ResetButtons()
         {
-            buttons = Controls.OfType<Button>()
-                .Where(b => b.Name != "buttonReset")
-                .ToList();
-
-            timeBox = Controls.OfType<TextBox>()
-                .FirstOrDefault(t => t.Name == "textBoxTime");
-
-            foreach (var button in buttons)
+            foreach (var button in mineButtons)
             {
-                if (button.Name == "buttonReset")
-                {
-                    break;
-                }
-
                 button.Text = string.Empty;
                 button.Enabled = true;
+                button.CellType = CellType.Empty;
+                button.FlagType = FlagType.None;
             }
 
             textBoxNrMines.Text = nrMines.ToString();
-            nrResolved = nrMines;
             buttonReset.Text = "Reset";
             textBoxTime.Text = "0";
         }
@@ -142,9 +119,9 @@ namespace MineSweeper
 
             foreach (var button in mineFreeButtons)
             {
-                for (int x = button.XPosition-1; x <= button.XPosition+1; x++)
+                for (int x = button.XPosition - 1; x <= button.XPosition + 1; x++)
                 {
-                    for (int y = button.YPosition-1; y <= button.YPosition+1; y++)
+                    for (int y = button.YPosition - 1; y <= button.YPosition + 1; y++)
                     {
                         if (x > 0 && y > 0 && x <= nrColumns && y <= nrRows)
                         {
@@ -164,86 +141,63 @@ namespace MineSweeper
         private void RandomizeMines()
         {
             Random rng = new Random();
-            int xPos;
-            int yPos;
+            int random;
+            List<MineButton> myList = new List<MineButton>();
+
+            foreach (var button in mineButtons)
+            {
+                myList.Add(button);
+            }
 
             for (int i = 0; i < nrMines; i++)
             {
-                bool minefreePos = false;
-
-                while (!minefreePos)
-                {
-                    xPos = rng.Next(1, (nrColumns+1));
-                    yPos = rng.Next(1, (nrRows+1));
-
-                    var button = mineButtons
-                        .FirstOrDefault(b => b.XPosition == xPos && b.YPosition == yPos);
-
-                    if (button.CellType != CellType.Mine)
-                    {
-                        button.CellType = CellType.Mine;
-                        minefreePos = true;
-                    }
-                }
+                random = rng.Next(0, myList.Count);
+                mineButtons[random].CellType = CellType.Mine;
+                myList.RemoveAt(random);
             }
         }
 
         private void CheckForWin()
         {
-            int nrCleared = 0;
+            int nrRevealedCells = 0;
 
-            if (running)
+            foreach (var button in mineButtons)
             {
-                foreach (var button in buttons)
+                if (button.CellType != CellType.Mine && button.FlagType == FlagType.Number)
                 {
-                    if (button.Text != string.Empty)
-                    {
-                        try
-                        {
-                            int mineNr = Convert.ToInt32(button.Text);
-
-                            if (mineNr > 0 && mineNr < 9)
-                            {
-                                ++nrCleared;
-                            }
-                        }
-                        catch (Exception)
-                        {
-
-                        }
-                    }
-
-                    if (button.Enabled == false)
-                    {
-                        ++nrCleared;
-                    }
+                    ++nrRevealedCells;
                 }
+            }
 
-                if (nrCleared + nrMines >= nrColumns)
-                {
-                    Win();
-                }
+            if ((nrMines + nrRevealedCells) >= mineButtons.Count)
+            {
+                Win();
             }
         }
 
         private void Win()
         {
+            var mineCells = mineButtons
+                .Where(b => b.CellType == CellType.Mine);
+
+            foreach (var cell in mineCells)
+            {
+                cell.ForeColor = Color.Red;
+                cell.Text = "í";
+            }
+
             buttonReset.Text = "You win!";
             running = false;
             timer.Stop();
         }
 
-        private void Lose(Button btn)
+        private void Lose(MineButton btn)
         {
             Explode(btn);
 
-            foreach (var button in buttons)
+            foreach (var button in mineButtons)
             {
-                string btnId = button.Name.Split('n')[1];
-                int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
-                int posY = Convert.ToInt32(btnId.Split('y')[1]);
-
-                if (mines[posX, posY] == 9)
+                if (button.CellType == CellType.Mine)
                 {
                     if (button.Text == string.Empty)
                     {
@@ -251,10 +205,10 @@ namespace MineSweeper
                         button.Text = "*";
                     }
                 }
-                else if (mines[posX, posY] != 9 && button.Text == "ì")
-                {
-                    button.Text = "X";
-                }
+                //else if (mines[posX, posY] != 9 && button.Text == "ì")
+                //{
+                //    button.Text = "X";
+                //}
             }
 
             running = false;
@@ -270,174 +224,75 @@ namespace MineSweeper
             //btn.BackColor = Color.Black;
         }
 
-        private void DisplayNumber(Button button)
+        private void DisplayNumber(MineButton button)
         {
-            string btnId = button.Name.Split('n')[1];
-            int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
-            int posY = Convert.ToInt32(btnId.Split('y')[1]);
-
-            switch (mines[posX, posY])
+            switch (button.CellType)
             {
-                case 0:
+                case CellType.Empty:
                     ClearEmptyCells(button);
                     break;
-                case 1:
+                case CellType.One:
                     button.ForeColor = Color.Green;
                     button.Text = "1";
-                    ++nrResolved;
                     break;
-                case 2:
+                case CellType.Two:
                     button.ForeColor = Color.Blue;
                     button.Text = "2";
-                    ++nrResolved;
                     break;
-                case 3:
+                case CellType.Three:
                     button.ForeColor = Color.DarkOrange;
                     button.Text = "3";
-                    ++nrResolved;
                     break;
-                case 4:
+                case CellType.Four:
                     button.ForeColor = Color.DarkRed;
                     button.Text = "4";
-                    ++nrResolved;
                     break;
-                case 5:
+                case CellType.Five:
                     button.ForeColor = Color.Purple;
                     button.Text = "5";
-                    ++nrResolved;
                     break;
-                case 6:
+                case CellType.Six:
                     button.ForeColor = Color.Brown;
                     button.Text = "6";
-                    ++nrResolved;
                     break;
-                case 9:
+                case CellType.Seven:
+                    button.ForeColor = Color.Brown;
+                    button.Text = "7";
+                    break;
+                case CellType.Eight:
+                    button.ForeColor = Color.Brown;
+                    button.Text = "8";
+                    break;
+                case CellType.Mine:
                     Lose(button);
                     break;
                 default:
-                    button.ForeColor = Color.Black;
-                    button.Text = mines[posX, posY].ToString();
-                    ++nrResolved;
                     break;
             }
+
+            if (button.CellType != CellType.Mine)
+            {
+                button.FlagType = FlagType.Number;
+            }
         }
 
-        private void ClearEmptyCells(Button button)
+        private void ClearEmptyCells(MineButton button)
         {
-            string btnId = button.Name.Split('n')[1];
-            int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
-            int posY = Convert.ToInt32(btnId.Split('y')[1]);
-
-            button.Text = string.Empty;
             button.Enabled = false;
 
-            //top left
-            if (posX > 0 && posY > 0)
+            for (int x = button.XPosition - 1; x <= button.XPosition + 1; x++)
             {
-                string buttonName = $"buttonx{posX - 1}y{posY - 1}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-
-            //top center
-            if (posY > 0)
-            {
-                string buttonName = $"buttonx{posX}y{posY - 1}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-
-            //top right
-            if (posX < 9 && posY > 0)
-            {
-                string buttonName = $"buttonx{posX + 1}y{posY - 1}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-
-            //left
-            if (posX > 0)
-            {
-                string buttonName = $"buttonx{posX - 1}y{posY}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-
-            //right
-            if (posX < 9)
-            {
-                string buttonName = $"buttonx{posX + 1}y{posY}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-
-            //bottom left
-            if (posX > 0 && posY < 9)
-            {
-                string buttonName = $"buttonx{posX - 1}y{posY + 1}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-
-            //bottom center
-            if (posY < 9)
-            {
-                string buttonName = $"buttonx{posX}y{posY + 1}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-
-            //bottom right
-            if (posX < 9 && posY < 9)
-            {
-                string buttonName = $"buttonx{posX + 1}y{posY + 1}";
-
-                Button b1 = Controls.OfType<Button>()
-                .FirstOrDefault(b => b.Name == buttonName);
-
-                UpdateCell(b1);
-            }
-        }
-
-        private void UpdateCell(Button button)
-        {
-            if (button.Enabled == true)
-            {
-                string btnId = button.Name.Split('n')[1];
-                int posX = Convert.ToInt32(btnId.Split('y')[0].Remove(0, 1));
-                int posY = Convert.ToInt32(btnId.Split('y')[1]);
-
-                if (mines[posX, posY] == 0)
+                for (int y = button.YPosition - 1; y <= button.YPosition + 1; y++)
                 {
-                    ++nrResolved;
-                    ClearEmptyCells(button);
-                }
-                else
-                {
-                    if (button.Text == string.Empty)
+                    if (x > 0 && y > 0 && x <= nrColumns && y <= nrRows)
                     {
-                        DisplayNumber(button);
+                        MineButton tempButton = mineButtons
+                            .FirstOrDefault(b => b.XPosition == x && b.YPosition == y);
+
+                        if (tempButton != button && tempButton.Enabled && tempButton.CellType != CellType.Mine)
+                        {
+                            DisplayNumber(tempButton);
+                        }
                     }
                 }
             }
@@ -454,33 +309,36 @@ namespace MineSweeper
 
             if (running)
             {
-                var button = sender as Button;
+                var button = sender as MineButton;
 
                 if (e.Button == MouseButtons.Left)
                 {
-                    if (button.Text == string.Empty)
+                    if (button.FlagType == FlagType.None)
                     {
                         DisplayNumber(button);
                     }
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
-                    if (button.Text == string.Empty)
+                    if (button.FlagType == FlagType.None)
                     {
+                        //button.Image = Image.FromFile(@"/Images/flag.png");
                         button.ForeColor = Color.Red;
-                        button.Text = "ì";
+                        button.Text = "í";
+                        button.FlagType = FlagType.Flag;
                         textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) - 1).ToString();
-                        //button.Image = Image.FromFile(@"C://images/flag.png");
                     }
-                    else if (button.Text == "ì")
+                    else if (button.FlagType == FlagType.Flag)
                     {
                         button.ForeColor = Color.Red;
                         button.Text = "?";
+                        button.FlagType = FlagType.Question;
                         textBoxNrMines.Text = (Convert.ToInt16(textBoxNrMines.Text) + 1).ToString();
                     }
-                    else if (button.Text == "?")
+                    else if (button.FlagType == FlagType.Question)
                     {
                         button.Text = string.Empty;
+                        button.FlagType = FlagType.None;
                     }
                 }
 
@@ -502,7 +360,14 @@ namespace MineSweeper
         {
             MineButton button = sender as MineButton;
             //labelInfo.Text = $"Thanks for stopping by {button.Name}.";
-            labelInfo.Text = button.CellType == CellType.Mine ? "MINES!" : "You're OK";
+            //labelInfo.Text = button.CellType == CellType.Mine ? "MINES!" : "You're OK";
+            //labelInfo.Text = $"{button.XPosition} : {button.YPosition}";
+            labelInfo.Text = $"{mineButtons.Where(b => b.FlagType == FlagType.Number).Count().ToString()} + {nrMines} / {mineButtons.Count}";
+        }
+
+        private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            buttonReset_Click(sender, e);
         }
     }
 }

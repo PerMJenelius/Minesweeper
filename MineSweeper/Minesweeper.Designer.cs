@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace MineSweeper
@@ -115,8 +116,9 @@ namespace MineSweeper
             // newGameToolStripMenuItem
             // 
             this.newGameToolStripMenuItem.Name = "newGameToolStripMenuItem";
-            this.newGameToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
+            this.newGameToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.newGameToolStripMenuItem.Text = "New Game";
+            this.newGameToolStripMenuItem.Click += new System.EventHandler(this.newGameToolStripMenuItem_Click);
             // 
             // labelInfo
             // 
@@ -159,6 +161,20 @@ namespace MineSweeper
             this.ResumeLayout(false);
             this.PerformLayout();
 
+        }
+
+        private void InitializeMineButton(MineButton button, int posX, int posY)
+        {
+            button.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            button.Location = new Point(posX, posY);
+            button.Margin = new Padding(0);
+            button.Size = new Size(20, 20);
+            button.Name = "button";
+            button.TabIndex = 5;
+            button.UseVisualStyleBackColor = true;
+            button.MouseDown += new MouseEventHandler(MineButton_Click);
+            button.MouseEnter += new EventHandler(HoverOverButton);
+            Controls.Add(button);
         }
 
         #endregion
