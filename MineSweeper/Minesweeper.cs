@@ -139,24 +139,57 @@ namespace MineSweeper
         private void RandomizeMines(MineButton button)
         {
             Random rng = new Random();
-            int random;
-            List<MineButton> myList = new List<MineButton>();
+            int x = 0;
+            int mines = 0;
+            int y = 0;
 
-            foreach (var btn in mineButtons)
+            do
             {
-                myList.Add(btn);
-            }
-
-            for (int i = 0; i < nrMines; i++)
-            {
-                random = rng.Next(0, myList.Count);
-
-                if (mineButtons[random] != button)
+                if (y < nrRows)
                 {
-                    mineButtons[random].CellType = CellType.Mine;
+                    ++y;
                 }
-                myList.RemoveAt(random);
-            }
+                else
+                {
+                    y = 1;
+                }
+                
+                bool searching = true;
+
+                do
+                {
+                    x = rng.Next(1, nrColumns + 1);
+                    MineButton tempButton = mineButtons
+                        .FirstOrDefault(b => b.XPosition == x && b.YPosition == y);
+
+                    if (tempButton != button && tempButton.CellType != CellType.Mine)
+                    {
+                        tempButton.CellType = CellType.Mine;
+                        ++mines;
+                        searching = false;
+                    }
+
+                } while (searching);
+
+            } while (mines < nrMines);
+
+            //List<MineButton> myList = new List<MineButton>();
+
+            //foreach (var btn in mineButtons)
+            //{
+            //    myList.Add(btn);
+            //}
+
+            //for (int i = 0; i < nrMines; i++)
+            //{
+            //    random = rng.Next(0, myList.Count);
+
+            //    if (mineButtons[random] != button)
+            //    {
+            //        mineButtons[random].CellType = CellType.Mine;
+            //    }
+            //    myList.RemoveAt(random);
+            //}
         }
 
         private void CheckForWin()
