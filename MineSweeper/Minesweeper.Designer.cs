@@ -116,7 +116,7 @@ namespace MineSweeper
             // newGameToolStripMenuItem
             // 
             this.newGameToolStripMenuItem.Name = "newGameToolStripMenuItem";
-            this.newGameToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.newGameToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
             this.newGameToolStripMenuItem.Text = "New Game";
             this.newGameToolStripMenuItem.Click += new System.EventHandler(this.newGameToolStripMenuItem_Click);
             // 
@@ -125,14 +125,12 @@ namespace MineSweeper
             this.labelInfo.AutoSize = true;
             this.labelInfo.Location = new System.Drawing.Point(3, 5);
             this.labelInfo.Name = "labelInfo";
-            this.labelInfo.Size = new System.Drawing.Size(23, 13);
+            this.labelInfo.Size = new System.Drawing.Size(0, 13);
             this.labelInfo.TabIndex = 0;
-            this.labelInfo.Text = "null";
             // 
             // panelInfo
             // 
-            this.panelInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelInfo.BackColor = System.Drawing.SystemColors.ControlLight;
             this.panelInfo.Controls.Add(this.labelInfo);

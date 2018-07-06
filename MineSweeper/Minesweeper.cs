@@ -12,7 +12,7 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 380;
+        static int nrMines = 300;
         static int nrColumns = 20; //max 93
         static int nrRows = 20; //max 52
         static List<MineButton> mineButtons;
@@ -140,21 +140,22 @@ namespace MineSweeper
         {
             Random rng = new Random();
             int x = 0;
-            int mines = 0;
             int y = 0;
+            int mines = 0;
+            int count = 0;
+            bool searching;
 
             do
             {
-                if (y < nrRows)
+                do
                 {
-                    ++y;
-                }
-                else
-                {
-                    y = 1;
-                }
-                
-                bool searching = true;
+                    y = rng.Next(1, nrRows + 1);
+                    count = mineButtons
+                        .Count(b => b.YPosition == y && b.CellType == CellType.Mine);
+
+                } while (count >= nrRows);
+
+                searching = true;
 
                 do
                 {
