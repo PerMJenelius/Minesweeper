@@ -13,6 +13,7 @@ namespace MineSweeper
         public int YPosition { get; set; }
         public CellType CellType { get; set; }
         public FlagType FlagType { get; set; }
+        public int Number { get; set; }
 
         public MineButton(int xPosition, int yPosition)
         {
@@ -69,7 +70,8 @@ namespace MineSweeper
         Six,
         Seven,
         Eight,
-        Mine
+        Mine,
+        Number
     }
 
     public enum FlagType

@@ -12,11 +12,12 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 20;
-        static int nrColumns = 93; //max 93
-        static int nrRows = 51; //max 51
+        static int nrMines = 380;
+        static int nrColumns = 20; //max 93
+        static int nrRows = 20; //max 52
         static List<MineButton> mineButtons;
-        static Button startButton;
+        List<MineButton> emptyButtons = new List<MineButton>();
+        List<MineButton> numberButtons = new List<MineButton>();
         static bool newGame = true;
         static bool running = false;
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -74,11 +75,11 @@ namespace MineSweeper
             buttonReset.Left = (Width / 2) - (buttonReset.Width / 2) - 8;
         }
 
-        private void NewGame()
+        private void NewGame(MineButton button)
         {
             ResetTextBoxes();
             ResetButtons();
-            RandomizeMines();
+            RandomizeMines(button);
             CalculateProximityValues();
             running = true;
             StartTimer();
@@ -99,10 +100,10 @@ namespace MineSweeper
                 button.Enabled = true;
                 button.CellType = CellType.Empty;
                 button.FlagType = FlagType.None;
+                button.Number = 0;
             }
 
             buttonReset.Text = "Reset";
-            textBoxTime.Text = "0";
         }
 
         private void CalculateProximityValues()
@@ -123,7 +124,11 @@ namespace MineSweeper
 
                             if (tempButton != button && tempButton.CellType == CellType.Mine)
                             {
-                                button.AddOneToCellType();
+                                if (button.CellType != CellType.Number)
+                                {
+                                    button.CellType = CellType.Number;
+                                }
+                                ++button.Number;
                             }
                         }
                     }
@@ -131,21 +136,25 @@ namespace MineSweeper
             }
         }
 
-        private void RandomizeMines()
+        private void RandomizeMines(MineButton button)
         {
             Random rng = new Random();
             int random;
             List<MineButton> myList = new List<MineButton>();
 
-            foreach (var button in mineButtons)
+            foreach (var btn in mineButtons)
             {
-                myList.Add(button);
+                myList.Add(btn);
             }
 
             for (int i = 0; i < nrMines; i++)
             {
                 random = rng.Next(0, myList.Count);
-                mineButtons[random].CellType = CellType.Mine;
+
+                if (mineButtons[random] != button)
+                {
+                    mineButtons[random].CellType = CellType.Mine;
+                }
                 myList.RemoveAt(random);
             }
         }
@@ -188,61 +197,97 @@ namespace MineSweeper
             timer.Stop();
         }
 
-        private void DisplayNumber(MineButton button)
+        private void CheckCell(MineButton button)
         {
             switch (button.CellType)
             {
-                case CellType.Empty:
-                    ClearEmptyCells(button);
-                    break;
-                case CellType.One:
-                    button.ForeColor = Color.Green;
-                    button.Text = "1";
-                    break;
-                case CellType.Two:
-                    button.ForeColor = Color.Blue;
-                    button.Text = "2";
-                    break;
-                case CellType.Three:
-                    button.ForeColor = Color.DarkOrange;
-                    button.Text = "3";
-                    break;
-                case CellType.Four:
-                    button.ForeColor = Color.DarkRed;
-                    button.Text = "4";
-                    break;
-                case CellType.Five:
-                    button.ForeColor = Color.Purple;
-                    button.Text = "5";
-                    break;
-                case CellType.Six:
-                    button.ForeColor = Color.Brown;
-                    button.Text = "6";
-                    break;
-                case CellType.Seven:
-                    button.ForeColor = Color.Black;
-                    button.Text = "7";
-                    break;
-                case CellType.Eight:
-                    button.ForeColor = Color.Black;
-                    button.Text = "8";
-                    break;
                 case CellType.Mine:
                     Lose(button);
                     break;
-                default:
+                case CellType.Empty:
+                    ClearEmptyCells(button);
                     break;
-            }
-
-            if (button.CellType != CellType.Mine)
-            {
-                button.FlagType = FlagType.Number;
+                case CellType.Number:
+                    DisplayNumber(button);
+                    break;
             }
         }
 
         private void ClearEmptyCells(MineButton button)
         {
-            button.Enabled = false;
+            List<MineButton> tempEmptyButtons = new List<MineButton>();
+            int nrButtons = 0;
+
+            numberButtons.Clear();
+            emptyButtons.Clear();
+            tempEmptyButtons.Add(button);
+
+            do
+            {
+                nrButtons = emptyButtons.Count + numberButtons.Count;
+
+                foreach (var btn in tempEmptyButtons)
+                {
+                    var newButtons = SearchAroundCell(btn);
+
+                    foreach (var newBtn in newButtons)
+                    {
+                        emptyButtons.Add(newBtn);
+                    }
+                }
+
+                foreach (var eBtn in emptyButtons)
+                {
+                    tempEmptyButtons.Add(eBtn);
+                }
+
+            } while ((emptyButtons.Count + numberButtons.Count) > nrButtons);
+
+            foreach (var btn in emptyButtons)
+            {
+                btn.Enabled = false;
+            }
+
+            foreach (var btn in numberButtons)
+            {
+                DisplayNumber(btn);
+            }
+        }
+
+        private void DisplayNumber(MineButton button)
+        {
+            switch (button.Number)
+            {
+                case 1:
+                    button.ForeColor = Color.Green;
+                    break;
+                case 2:
+                    button.ForeColor = Color.Blue;
+                    break;
+                case 3:
+                    button.ForeColor = Color.DarkOrange;
+                    break;
+                case 4:
+                    button.ForeColor = Color.DarkRed;
+                    break;
+                case 5:
+                    button.ForeColor = Color.Purple;
+                    break;
+                case 6:
+                    button.ForeColor = Color.Brown;
+                    break;
+                case 7:
+                case 8:
+                    button.ForeColor = Color.Black;
+                    break;
+            }
+            button.Text = button.Number.ToString();
+            button.FlagType = FlagType.Number;
+        }
+
+        private List<MineButton> SearchAroundCell(MineButton button)
+        {
+            List<MineButton> output = new List<MineButton>();
 
             for (int x = button.XPosition - 1; x <= button.XPosition + 1; x++)
             {
@@ -255,11 +300,22 @@ namespace MineSweeper
 
                         if (tempButton.FlagType == FlagType.None && tempButton.CellType != CellType.Mine)
                         {
-                            DisplayNumber(tempButton);
+                            if (tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton) && !output.Contains(tempButton))
+                            {
+                                output.Add(tempButton);
+                            }
+                            else if (tempButton.CellType != CellType.Empty && !numberButtons.Contains(tempButton))
+                            {
+                                numberButtons.Add(tempButton);
+                            }
+
+                            tempButton.FlagType = FlagType.Number;
                         }
                     }
                 }
             }
+
+            return output;
         }
 
         private void MineButton_Click(object sender, MouseEventArgs e)
@@ -267,8 +323,7 @@ namespace MineSweeper
             if (newGame)
             {
                 newGame = false;
-                startButton = sender as MineButton;
-                NewGame();
+                NewGame(sender as MineButton);
             }
 
             if (running)
@@ -279,7 +334,7 @@ namespace MineSweeper
                 {
                     if (button.FlagType == FlagType.None)
                     {
-                        DisplayNumber(button);
+                        CheckCell(button);
                     }
                 }
                 else if (e.Button == MouseButtons.Right)
@@ -314,12 +369,7 @@ namespace MineSweeper
 
         private void MineButton_Hover(object sender, EventArgs e)
         {
-            MineButton button = sender as MineButton;
-            //labelInfo.Text = $"Thanks for stopping by {button.Name}.";
-            //labelInfo.Text = button.CellType == CellType.Mine ? "MINES!" : "You're OK";
-            //labelInfo.Text = $"{button.XPosition} : {button.YPosition}";
-            //labelInfo.Text = $"{mineButtons.Where(b => b.FlagType == FlagType.Number).Count().ToString()} + {nrMines} / {mineButtons.Count}";
-            labelInfo.Text = $"{mineButtons.Count(b => b.FlagType == FlagType.Number)} / {mineButtons.Count(b => b.CellType != CellType.Mine)}";
+            //Calculate probabilty
         }
 
         private void buttonReset_Click(object sender, EventArgs e)
@@ -327,6 +377,7 @@ namespace MineSweeper
             timer.Stop();
             textBoxTime.Text = "0";
             ResetButtons();
+            ResetTextBoxes();
             newGame = true;
         }
 
