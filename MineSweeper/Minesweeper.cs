@@ -12,9 +12,9 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 1;
-        static int nrColumns = 10; //max 95
-        static int nrRows = 10; //max 52
+        static int nrMines = 50;
+        static int nrColumns = 20; //max 95
+        static int nrRows = 20; //max 52
         static List<MineButton> mineButtons;
         static List<MineButton> emptyButtons = new List<MineButton>();
         static List<MineButton> numberButtons = new List<MineButton>();
@@ -139,23 +139,21 @@ namespace MineSweeper
 
         private void RandomizeMines(MineButton button)
         {
-            List<int> randomList = new List<int>();
             Random random = new Random();
+            List<MineButton> rngList = new List<MineButton>();
 
-            for (int i = 0; i < mineButtons.Count; i++)
-            {
-                randomList.Add(i);
-            }
+            rngList.AddRange(mineButtons);
 
             var btnIndex = mineButtons.IndexOf(button);
-            randomList.RemoveAt(btnIndex);
+            rngList.RemoveAt(btnIndex);
 
             for (int i = 0; i < nrMines; i++)
             {
-                int randomIndex = random.Next(0, randomList.Count);
-                int randomMine = randomList[randomIndex];
-                mineButtons[randomMine].CellType = CellType.Mine;
-                randomList.RemoveAt(randomIndex);
+                int randomIndex = random.Next(0, rngList.Count);
+                var randomMine = rngList[randomIndex];
+                var newButton = mineButtons.FirstOrDefault(b => b.XPosition == randomMine.XPosition && b.YPosition == randomMine.YPosition);
+                newButton.CellType = CellType.Mine;
+                rngList.Remove(randomMine);
             }
         }
 
@@ -253,6 +251,7 @@ namespace MineSweeper
             List<MineButton> tempButtons = new List<MineButton>();
             List<MineButton> foundButtons = new List<MineButton>();
 
+            emptyButtons.Add(button);
             tempButtons.Add(button);
 
             do
@@ -287,20 +286,26 @@ namespace MineSweeper
             List<MineButton> tempButtons = new List<MineButton>();
             List<MineButton> output = new List<MineButton>();
 
-            for (int y = (button.YPosition - 1); y <= (button.YPosition + 1); y++)
-            {
-                for (int x = (button.XPosition - 1); x <= (button.XPosition + 1); x++)
-                {
-                    if (x >= 1 && x <= nrColumns && y >= 1 && y <= nrRows)
-                    {
-                        tempButtons.Add(mineButtons.FirstOrDefault(b => b.XPosition == x && b.YPosition == y));
-                    }
-                }
-            }
+            //for (int y = (button.YPosition - 1); y <= (button.YPosition + 1); y++)
+            //{
+            //    for (int x = (button.XPosition - 1); x <= (button.XPosition + 1); x++)
+            //    {
+            //        if (x >= 1 && x <= nrColumns && y >= 1 && y <= nrRows)
+            //        {
+            //            tempButtons.Add(mineButtons.FirstOrDefault(b => b.XPosition == x && b.YPosition == y));
+            //        }
+            //    }
+            //}
+
+            tempButtons.AddRange(mineButtons
+                .Where(b => b.XPosition >= (button.XPosition - 1) 
+                && b.XPosition <= (button.XPosition + 1) 
+                && b.YPosition >= (button.YPosition - 1)
+                && b.YPosition <= (button.YPosition + 1)));
 
             foreach (var tempButton in tempButtons)
             {
-                if (tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton))
+                if (tempButton != button && tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton))
                 {
                     output.Add(tempButton);
                 }
@@ -313,98 +318,98 @@ namespace MineSweeper
             return output;
         }
 
-        //private List<MineButton> SearchAroundCellNew(MineButton button)
-        //{
-        //    List<MineButton> tempButtons = new List<MineButton>();
-        //    List<MineButton> output = new List<MineButton>();
-        //    emptyButtons.Add(button);
+        private List<MineButton> SearchAroundCellNew(MineButton button)
+        {
+            List<MineButton> tempButtons = new List<MineButton>();
+            List<MineButton> output = new List<MineButton>();
+            emptyButtons.Add(button);
 
-        //    int x = button.XPosition;
-        //    int y = button.YPosition;
-        //    int z = 0;
-        //    bool top = true, right = true, bottom = true, left = true;
-        //    int nrEmpty = 0;
-        //    bool searching = true;
+            int x = button.XPosition;
+            int y = button.YPosition;
+            int z = 0;
+            bool top = true, right = true, bottom = true, left = true;
+            int nrEmpty = 0;
+            bool searching = true;
 
-        //    do
-        //    {
-        //        ++z;
+            do
+            {
+                ++z;
 
-        //        tempButtons.Clear();
+                tempButtons.Clear();
 
-        //        if (top)
-        //        {
-        //            var newButtons = mineButtons.Where(b => b.XPosition >= (x - z) && b.XPosition <= (x + z) && b.YPosition == (y - z));
+                if (top)
+                {
+                    var newButtons = mineButtons.Where(b => b.XPosition >= (x - z) && b.XPosition <= (x + z) && b.YPosition == (y - z));
 
-        //            if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
-        //            {
-        //                tempButtons.AddRange(newButtons);
-        //            }
-        //            else
-        //            {
-        //                top = false;
-        //            }
-        //        }
-        //        if (right)
-        //        {
-        //            var newButtons = mineButtons.Where(b => b.XPosition == (x + z) && b.YPosition > (y - z) && b.YPosition < (y + z));
+                    if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
+                    {
+                        tempButtons.AddRange(newButtons);
+                    }
+                    else
+                    {
+                        top = false;
+                    }
+                }
+                if (right)
+                {
+                    var newButtons = mineButtons.Where(b => b.XPosition == (x + z) && b.YPosition > (y - z) && b.YPosition < (y + z));
 
-        //            if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
-        //            {
-        //                tempButtons.AddRange(newButtons);
-        //            }
-        //            else
-        //            {
-        //                right = false;
-        //            }
-        //        }
-        //        if (bottom)
-        //        {
-        //            var newButtons = mineButtons.Where(b => b.XPosition >= (x - z) && b.XPosition <= (x + z) && b.YPosition == (y + z));
+                    if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
+                    {
+                        tempButtons.AddRange(newButtons);
+                    }
+                    else
+                    {
+                        right = false;
+                    }
+                }
+                if (bottom)
+                {
+                    var newButtons = mineButtons.Where(b => b.XPosition >= (x - z) && b.XPosition <= (x + z) && b.YPosition == (y + z));
 
-        //            if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
-        //            {
-        //                tempButtons.AddRange(newButtons);
-        //            }
-        //            else
-        //            {
-        //                bottom = false;
-        //            }
-        //        }
-        //        if (left)
-        //        {
-        //            var newButtons = mineButtons.Where(b => b.XPosition == (x - z) && b.YPosition > (y - z) && b.YPosition < (y + z));
+                    if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
+                    {
+                        tempButtons.AddRange(newButtons);
+                    }
+                    else
+                    {
+                        bottom = false;
+                    }
+                }
+                if (left)
+                {
+                    var newButtons = mineButtons.Where(b => b.XPosition == (x - z) && b.YPosition > (y - z) && b.YPosition < (y + z));
 
-        //            if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
-        //            {
-        //                tempButtons.AddRange(newButtons);
-        //            }
-        //            else
-        //            {
-        //                left = false;
-        //            }
-        //        }
+                    if (newButtons.Count(b => b.CellType == CellType.Mine) == 0)
+                    {
+                        tempButtons.AddRange(newButtons);
+                    }
+                    else
+                    {
+                        left = false;
+                    }
+                }
 
-        //        nrEmpty = 0;
+                nrEmpty = 0;
 
-        //        foreach (var tempButton in tempButtons)
-        //        {
-        //            if (tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton))
-        //            {
-        //                output.Add(tempButton);
-        //                ++nrEmpty;
-        //            }
-        //            else if (tempButton.CellType == CellType.Number && !numberButtons.Contains(tempButton))
-        //            {
-        //                numberButtons.Add(tempButton);
-        //            }
-        //        }
-        //        searching = nrEmpty > 0;
+                foreach (var tempButton in tempButtons)
+                {
+                    if (tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton))
+                    {
+                        output.Add(tempButton);
+                        ++nrEmpty;
+                    }
+                    else if (tempButton.CellType == CellType.Number && !numberButtons.Contains(tempButton))
+                    {
+                        numberButtons.Add(tempButton);
+                    }
+                }
+                searching = nrEmpty > 0;
 
-        //    } while (searching);
+            } while (searching);
 
-        //    return output;
-        //}
+            return output;
+        }
 
         private void MineButton_Click(object sender, MouseEventArgs e)
         {
