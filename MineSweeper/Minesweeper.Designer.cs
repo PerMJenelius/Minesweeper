@@ -166,8 +166,7 @@ namespace MineSweeper
 
         private void InitializeMineButton(MineButton button, int posX, int posY)
         {
-            button.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            button.BackColor = SystemColors.ButtonFace;
+            //button.BackColor = SystemColors.ButtonFace;
             button.Location = new Point(posX, posY);
             button.Size = new Size(20, 20);
             button.MouseDown += new MouseEventHandler(MineButton_Click);
