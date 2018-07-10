@@ -156,44 +156,6 @@ namespace MineSweeper
             timer.Start();
         }
 
-        private void CheckForWin()
-        {
-            if (mineButtons.Count(b => b.FlagType == FlagType.Number) == mineButtons.Count(b => b.CellType != CellType.Mine))
-            {
-                Win();
-            }
-        }
-
-        private void Win()
-        {
-            var mineCells = mineButtons
-                .Where(b => b.CellType == CellType.Mine);
-
-            foreach (var cell in mineCells)
-            {
-                cell.ForeColor = Color.Black;
-                cell.Text = "*";
-            }
-
-            buttonReset.Text = "You win!";
-            running = false;
-            timer.Stop();
-        }
-
-        private void Lose(MineButton btn)
-        {
-            foreach (var button in mineButtons)
-            {
-                if (button.CellType == CellType.Mine)
-                {
-                    button.BackColor = Color.Black;
-                }
-            }
-
-            running = false;
-            timer.Stop();
-        }
-
         private void CheckCell(MineButton button)
         {
             switch (button.CellType)
@@ -250,7 +212,6 @@ namespace MineSweeper
             List<MineButton> tempButtons = new List<MineButton>();
             List<MineButton> foundButtons = new List<MineButton>();
 
-            emptyButtons.Add(button);
             tempButtons.Add(button);
 
             do
@@ -293,7 +254,7 @@ namespace MineSweeper
 
             foreach (var tempButton in tempButtons)
             {
-                if (tempButton != button && tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton))
+                if (tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton))
                 {
                     output.Add(tempButton);
                 }
@@ -306,24 +267,61 @@ namespace MineSweeper
             return output;
         }
 
+        private void CheckForWin()
+        {
+            if (mineButtons.Count(b => b.FlagType == FlagType.Number) ==
+                mineButtons.Count(b => b.CellType != CellType.Mine))
+            {
+                Win();
+            }
+        }
+
+        private void Win()
+        {
+            var mineCells = mineButtons
+                .Where(b => b.CellType == CellType.Mine);
+
+            foreach (var cell in mineCells)
+            {
+                cell.ForeColor = Color.Black;
+                cell.Text = "*";
+            }
+
+            buttonReset.Text = "You win!";
+            running = false;
+            timer.Stop();
+        }
+
+        private void Lose(MineButton btn)
+        {
+            foreach (var button in mineButtons)
+            {
+                if (button.CellType == CellType.Mine)
+                {
+                    button.BackColor = Color.Black;
+                }
+            }
+
+            running = false;
+            timer.Stop();
+        }
+
         private void MineButton_Click(object sender, MouseEventArgs e)
         {
+            var button = sender as MineButton;
+
             if (newGame)
             {
                 newGame = false;
-                NewGame(sender as MineButton);
+                NewGame(button);
             }
 
             if (running)
             {
-                var button = sender as MineButton;
-
-                if (e.Button == MouseButtons.Left)
+                if (e.Button == MouseButtons.Left 
+                    && button.FlagType == FlagType.None)
                 {
-                    if (button.FlagType == FlagType.None)
-                    {
-                        CheckCell(button);
-                    }
+                    CheckCell(button);
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
