@@ -12,12 +12,10 @@ namespace MineSweeper
 {
     public partial class MineSweeper : Form
     {
-        static int nrMines = 100;
-        static int nrColumns = 25; //max 95
-        static int nrRows = 25; //max 52
+        static int nrMines = 10;
+        static int nrColumns = 10; //max 95
+        static int nrRows = 10; //max 52
         static List<MineButton> mineButtons;
-        static List<MineButton> emptyButtons = new List<MineButton>();
-        static List<MineButton> numberButtons = new List<MineButton>();
         static bool newGame = true;
         static bool running = false;
         System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
@@ -206,28 +204,39 @@ namespace MineSweeper
 
         private void ClearEmptyCells(MineButton button)
         {
-            numberButtons.Clear();
-            emptyButtons.Clear();
-
-            List<MineButton> tempButtons = new List<MineButton>();
+            List<MineButton> emptyButtons = new List<MineButton>();
+            List<MineButton> numberButtons = new List<MineButton>();
+            List<MineButton> searchButtons = new List<MineButton>();
             List<MineButton> foundButtons = new List<MineButton>();
 
-            tempButtons.Add(button);
+            searchButtons.Add(button);
 
             do
             {
                 foundButtons.Clear();
 
-                foreach (var btn in tempButtons)
+                foreach (var btn in searchButtons)
                 {
-                    foundButtons.AddRange(SearchAroundCell(btn));
+                    foundButtons.AddRange(mineButtons
+                        .Where(b => b.XPosition >= (btn.XPosition - 1)
+                        && b.XPosition <= (btn.XPosition + 1)
+                        && b.YPosition >= (btn.YPosition - 1)
+                        && b.YPosition <= (btn.YPosition + 1)));
                 }
 
-                tempButtons.Clear();
-                tempButtons.AddRange(foundButtons);
-                emptyButtons.AddRange(foundButtons);
+                searchButtons.Clear();
 
-            } while (tempButtons.Count > 0);
+                searchButtons.AddRange(foundButtons
+                    .Where(b => b.CellType == CellType.Empty)
+                    .Except(emptyButtons));
+
+                numberButtons.AddRange(foundButtons
+                    .Where(b => b.CellType == CellType.Number)
+                    .Except(numberButtons));
+
+                emptyButtons.AddRange(searchButtons);
+
+            } while (searchButtons.Count > 0);
 
             foreach (var btn in emptyButtons)
             {
@@ -239,32 +248,6 @@ namespace MineSweeper
             {
                 DisplayNumber(btn);
             }
-        }
-
-        private List<MineButton> SearchAroundCell(MineButton button)
-        {
-            List<MineButton> tempButtons = new List<MineButton>();
-            List<MineButton> output = new List<MineButton>();
-
-            tempButtons.AddRange(mineButtons
-                .Where(b => b.XPosition >= (button.XPosition - 1)
-                && b.XPosition <= (button.XPosition + 1)
-                && b.YPosition >= (button.YPosition - 1)
-                && b.YPosition <= (button.YPosition + 1)));
-
-            foreach (var tempButton in tempButtons)
-            {
-                if (tempButton.CellType == CellType.Empty && !emptyButtons.Contains(tempButton))
-                {
-                    output.Add(tempButton);
-                }
-                else if (tempButton.CellType == CellType.Number && !numberButtons.Contains(tempButton))
-                {
-                    numberButtons.Add(tempButton);
-                }
-            }
-
-            return output;
         }
 
         private void CheckForWin()
