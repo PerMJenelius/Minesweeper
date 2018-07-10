@@ -13,8 +13,8 @@ namespace MineSweeper
     public partial class MineSweeper : Form
     {
         static int nrMines = 10;
-        static int nrColumns = 10; //max 95
-        static int nrRows = 10; //max 52
+        static int nrColumns = 12; //max 95
+        static int nrRows = 12; //max 52
         static List<MineButton> mineButtons;
         static bool newGame = true;
         static bool running = false;
@@ -204,10 +204,9 @@ namespace MineSweeper
 
         private void ClearEmptyCells(MineButton button)
         {
-            List<MineButton> emptyButtons = new List<MineButton>();
-            List<MineButton> numberButtons = new List<MineButton>();
             List<MineButton> searchButtons = new List<MineButton>();
             List<MineButton> foundButtons = new List<MineButton>();
+            List<MineButton> keepButtons = new List<MineButton>();
 
             searchButtons.Add(button);
 
@@ -221,32 +220,30 @@ namespace MineSweeper
                         .Where(b => b.XPosition >= (btn.XPosition - 1)
                         && b.XPosition <= (btn.XPosition + 1)
                         && b.YPosition >= (btn.YPosition - 1)
-                        && b.YPosition <= (btn.YPosition + 1)));
+                        && b.YPosition <= (btn.YPosition + 1)
+                        && b.CellType != CellType.Mine)
+                        .Except(keepButtons));
                 }
 
                 searchButtons.Clear();
-
                 searchButtons.AddRange(foundButtons
-                    .Where(b => b.CellType == CellType.Empty)
-                    .Except(emptyButtons));
+                    .Where(b => b.CellType == CellType.Empty));
 
-                numberButtons.AddRange(foundButtons
-                    .Where(b => b.CellType == CellType.Number)
-                    .Except(numberButtons));
-
-                emptyButtons.AddRange(searchButtons);
+                keepButtons.AddRange(foundButtons);
 
             } while (searchButtons.Count > 0);
 
-            foreach (var btn in emptyButtons)
+            foreach (var btn in keepButtons)
             {
-                btn.Enabled = false;
-                btn.FlagType = FlagType.Number;
-            }
-
-            foreach (var btn in numberButtons)
-            {
-                DisplayNumber(btn);
+                if (btn.CellType == CellType.Empty)
+                {
+                    btn.Enabled = false;
+                    btn.FlagType = FlagType.Number;
+                }
+                else if (btn.CellType == CellType.Number)
+                {
+                    DisplayNumber(btn);
+                }
             }
         }
 
